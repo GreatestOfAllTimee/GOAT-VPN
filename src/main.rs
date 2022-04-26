@@ -1,59 +1,80 @@
-use requestty::{Answer, Question};
-use std::{fs::File, io::Read};
+#![allow(unused_variables, unused_imports)]
+// use ruplacer::{FilePatcher, Query};
+mod core;
+mod utils;
+use crate::core::proccessing::{delete_line, delete_line_regex, find_words, read_file};
+use crate::utils::prompt_interface::{user_prompt, vec_prompt};
+use crate::utils::services::MENU_OVPN_SSH;
 
-fn read_file() -> Vec<String> {
-    let mut file = File::open("input.txt")
-        .map_err(|_| {
-            println!("Could not open file");
-            std::process::exit(1);
-        })
-        .unwrap();
+use anyhow::{Context, Result};
+use regex::Regex;
+use requestty::Question;
+use std::path::PathBuf;
 
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .map_err(|_| {
-            println!("Could not read file");
-            std::process::exit(1);
-        })
-        .unwrap();
+fn main() -> Result<()> {
+    let file: &str = "input.txt";
+    let maria = user_prompt("Enter your name", 3)?;
+    let name = vec_prompt(read_file(file)?, 2)?;
+    println!("{:?}", name);
 
-    // split whitespace and only take the second and third
-    contents
-        .lines()
-        .map(|s| s.split_whitespace().collect::<Vec<&str>>()[1..3].join(" "))
-        .collect()
-}
+    println!("{}", maria);
+    println!("{}", name);
 
-fn main() {
-    let err_msg: &str = "Name cannot be empty!";
-    let err_msg2: &str = "Name must be at least 3 characters long!";
+    let f = read_file(file)?;
+    let found: bool = find_words(&f, "Zayne");
 
-    let question_1: Question = Question::input("name")
-        .message("Enter your name")
-        .validate(|s, _| {
-            if s.is_empty() {
-                Err(err_msg.to_string())
-            } else if s.len() < 3 {
-                Err(err_msg2.to_string())
-            } else {
-                Ok(())
-            }
-        })
-        .build();
+    if found {
+        println!("Found");
+    } else {
+        println!("Not found");
+    }
 
-    let maria: Answer = requestty::prompt_one(question_1).unwrap();
+    let openvpn = Question::raw_select("service")
+        .message("Select a service")
+        .choices(MENU_OVPN_SSH);
 
-    let question_2: Question = Question::raw_select("Multi Select")
-        .message("Choose your favorite authors")
-        .choices(read_file())
-        .build();
+    let openvpn = requestty::prompt_one(openvpn)?;
 
-    let authors = requestty::prompt_one(question_2).unwrap();
-    let authors = authors.try_into_list_item().unwrap();
-    let authors = authors.text.as_str();
+    // get openvpn value
+    let openvpn = openvpn
+        .as_list_item()
+        .context("Error getting openvpn value")?;
 
-    let client_name = authors.split_whitespace().collect::<Vec<&str>>()[0];
+    match openvpn.index {
+        0 => println!("OpenVPN"),
+        1 => println!("SSH"),
+        2 => println!("V2ray"),
+        3 => println!("Trojan"),
+        4 => println!("Shadowsocks"),
+        _ => println!("Error"),
+    }
 
-    println!("{}", maria.as_string().unwrap_or(""));
-    println!("{}", client_name);
+    // println!("index: {}\nvec_length: {}", openvpn.index, MENU_OVPN_SSH.len());
+
+    /* second_name is a for take a second word in name variable */
+    // let second_name = &name.split_whitespace().collect::<Vec<&str>>()[1];
+    // let full_name = format!("{}\n", &name);
+    // let pattern = Regex::new(r"#[A-Z] Zayne 16-06-2021")?;
+    // let pattern = Regex::new(format!(r"(?i) {}", &full_name).as_str())?;
+    // delete_line(file, &full_name)?;
+    // delete_line_regex(file, pattern)?;
+
+    // let test = Regex::new(format!(r"(?s)#([A-Z]+)(?m) {}+", &name).as_str())?;
+    // remove test from the file including the line
+    // let before = "#USER Zayne 16-06-2021";
+    // replace before without new line
+
+    // let test = Regex::new(format!(r"(?s)#([A-Z]+)(?m) {}+\n", &name).as_str())?;
+    // delete_line_regex(file, test)?;
+
+    // let find_i = core::proccessing::find_words(&f, "mari");
+    // let find_i = find_i.split(' ').next().unwrap(); /* only take the first word found */
+    /*
+    let file = PathBuf::from("input.txt");
+    let query = Query::substring(find_i, "Mari");
+    let patcher = FilePatcher::new(&file, &query).unwrap();
+    patcher.unwrap().run().unwrap();
+    */
+
+    Ok(())
 }
