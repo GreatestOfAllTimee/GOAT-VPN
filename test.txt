@@ -1,0 +1,14 @@
+#USER John
+Link: google.com
+#ENDUSER John
+
+#USER MARK
+UUID: 1234567890    <-- ignore this line but still remove from file
+#ENDUSER MARK
+
+#USER Frenk
+Password: abcdef987654321
+#ENDUSER Frenk
+
+### sed commands
+/^#USER MARK/,/^#ENDUSER MARK/d

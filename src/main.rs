@@ -1,80 +1,76 @@
-#![allow(unused_variables, unused_imports)]
-// use ruplacer::{FilePatcher, Query};
-mod core;
+// #![allow(unused_variables, unused_imports)]
+mod cores;
 mod utils;
-use crate::core::proccessing::{delete_line, delete_line_regex, find_words, read_file};
-use crate::utils::prompt_interface::{user_prompt, vec_prompt};
-use crate::utils::services::MENU_OVPN_SSH;
 
-use anyhow::{Context, Result};
-use regex::Regex;
-use requestty::Question;
-use std::path::PathBuf;
+use anyhow::{anyhow, Context, Result};
+use cores::calculate::add_user_date;
+use cores::proccessing::{append_line, display_user_data};
+
+#[allow(unused_imports)]
+use utils::game::call_prompt;
+
+#[allow(unused_imports)]
+use utils::{
+    display_interface::prompt_ssh_ovpn,
+    prompt_interface::{ask_user_date, password_prompt, user_prompt, user_prompt_index},
+    structer::User,
+    user_files::SSH_OVPN,
+};
+
+#[allow(dead_code)]
+const FILE: &str = "input.txt";
 
 fn main() -> Result<()> {
-    let file: &str = "input.txt";
-    let maria = user_prompt("Enter your name", 3)?;
-    let name = vec_prompt(read_file(file)?, 2)?;
-    println!("{:?}", name);
+    // create_user()?;
+    // auto_run()?;
+    // delete_user()?;
+    // prompt_ssh_ovpn()?;
+    call_prompt();
 
-    println!("{}", maria);
-    println!("{}", name);
+    // append_json("v2ray.json", data)?;
+    // remove_json_value("v2ray.json", email)?;
 
-    let f = read_file(file)?;
-    let found: bool = find_words(&f, "Zayne");
+    // let new_data: serde_json::Value = "Zulaikha".into();
+    // append_json_trojan("/etc/v2ray/config.json", new_data)?;
+    // remove_json_trojan("data/json/trojan.json", "Zulaikha")?;
 
-    if found {
-        println!("Found");
-    } else {
-        println!("Not found");
+    Ok(())
+}
+
+#[allow(dead_code)]
+fn delete_user() -> Result<()> {
+    let details = display_user_data(SSH_OVPN)?;
+    let display = user_prompt_index("Select user", details)?;
+    let display = display.as_list_item().context("Invalid user")?;
+
+    cores::expiry::manual_run(SSH_OVPN, &display.text, false)?;
+    Ok(())
+}
+
+#[allow(dead_code)]
+fn create_user() -> Result<()> {
+    let user_name = user_prompt("Enter username", 3, SSH_OVPN)?;
+    let user_password = password_prompt("Confirm your password")?;
+    let user_password_confirm = password_prompt("Confirm your password")?;
+
+    if user_password != user_password_confirm {
+        return Err(anyhow!("Password and confirm password does not match"));
     }
 
-    let openvpn = Question::raw_select("service")
-        .message("Select a service")
-        .choices(MENU_OVPN_SSH);
+    let ask_date = ask_user_date("Total Days To Exp (days):")?;
+    let ask_date = ask_date.as_int().context("failed to get date")?;
+    let date = add_user_date(ask_date);
 
-    let openvpn = requestty::prompt_one(openvpn)?;
+    let user_data = User {
+        name: user_name,
+        password: user_password,
+        date,
+    };
 
-    // get openvpn value
-    let openvpn = openvpn
-        .as_list_item()
-        .context("Error getting openvpn value")?;
-
-    match openvpn.index {
-        0 => println!("OpenVPN"),
-        1 => println!("SSH"),
-        2 => println!("V2ray"),
-        3 => println!("Trojan"),
-        4 => println!("Shadowsocks"),
-        _ => println!("Error"),
-    }
-
-    // println!("index: {}\nvec_length: {}", openvpn.index, MENU_OVPN_SSH.len());
-
-    /* second_name is a for take a second word in name variable */
-    // let second_name = &name.split_whitespace().collect::<Vec<&str>>()[1];
-    // let full_name = format!("{}\n", &name);
-    // let pattern = Regex::new(r"#[A-Z] Zayne 16-06-2021")?;
-    // let pattern = Regex::new(format!(r"(?i) {}", &full_name).as_str())?;
-    // delete_line(file, &full_name)?;
-    // delete_line_regex(file, pattern)?;
-
-    // let test = Regex::new(format!(r"(?s)#([A-Z]+)(?m) {}+", &name).as_str())?;
-    // remove test from the file including the line
-    // let before = "#USER Zayne 16-06-2021";
-    // replace before without new line
-
-    // let test = Regex::new(format!(r"(?s)#([A-Z]+)(?m) {}+\n", &name).as_str())?;
-    // delete_line_regex(file, test)?;
-
-    // let find_i = core::proccessing::find_words(&f, "mari");
-    // let find_i = find_i.split(' ').next().unwrap(); /* only take the first word found */
-    /*
-    let file = PathBuf::from("input.txt");
-    let query = Query::substring(find_i, "Mari");
-    let patcher = FilePatcher::new(&file, &query).unwrap();
-    patcher.unwrap().run().unwrap();
-    */
+    append_line(
+        SSH_OVPN,
+        format!("#USER {} {}\n", user_data.name, user_data.date),
+    )?;
 
     Ok(())
 }
