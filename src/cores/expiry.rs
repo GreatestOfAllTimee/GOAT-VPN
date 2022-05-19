@@ -53,22 +53,35 @@ pub fn auto_run() -> Result<()> {
     Ok(())
 }
 
+/// [file_name] - file name
+/// [user] username to delete
+/// [only_username] - if set to true, means user "variable" contains username otherwise it contains
+/// username and date
+///
+/// # Examples
+/// ```
+/// const FILE_NAME: &str = "file.txt";
+///
+/// let username: &str = "John_Smith";
+/// manual_run(FILE_NAME, username, false)?;
+/// // or
+/// let username: &str = "John_Smith 2022-01-01";
+/// manual_run(FILE_NAME, username, true)?;
+/// ```
 #[allow(dead_code)]
-pub fn manual_run(file: &str, user: &str, only: bool) -> Result<()> {
-    // if only is true then that means user variable is only have username
-    // if only is false then that means user variable is username and date
-    let mut reader = lets_read::Reader::open(file)?;
+pub fn manual_run(file_name: &str, user: &str, only_username: bool) -> Result<()> {
+    let mut reader = lets_read::Reader::open(file_name)?;
     let mut buffer = String::new();
 
     while let Some(line) = reader.read_line(&mut buffer) {
         let line = line?.trim();
         if !line.is_empty() && line.contains(user) {
-            if only {
+            if only_username {
                 let date = get_user_index(line, 2);
                 let user_date = NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d")?;
-                clear_user_data(file, user, user_date)?;
+                clear_user_data(file_name, user, user_date)?;
             } else {
-                clear_user_data_two(file, user)?;
+                clear_user_data_two(file_name, user)?;
             }
         }
     }

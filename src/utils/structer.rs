@@ -4,7 +4,7 @@ pub struct User {
     pub date: chrono::NaiveDate,
 }
 
-pub enum UserSSH {
+pub enum MainMenu {
     Openvpn,
     Shadowsocks,
     ShadowsocksR,
@@ -17,6 +17,8 @@ pub enum OvpnServices {
     Delete,
     Renew,
     List,
+    Back,
+    Exit,
 }
 
 pub enum ShadowServices {
@@ -24,4 +26,6 @@ pub enum ShadowServices {
     Delete,
     Renew,
     List,
+    Back,
+    Exit,
 }

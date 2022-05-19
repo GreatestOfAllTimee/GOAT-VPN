@@ -1,13 +1,18 @@
-use anyhow::{Context, Result};
-use requestty::Question;
-
-use crate::{
-    cores::proccessing::append_line,
-    utils::{
-        banner::BANNER_SS, display_interface::print_lines, game::clear_screen,
-        structer::ShadowServices, user_files::SS, MENU_SHADOW,
-    },
+use crate::{cores::{
+    proccessing::{append_line, display_user_data},
+    types_error::{display_error, display_error_convert},
+}, utils::prompt_interface::user_prompt_index};
+use crate::utils::{
+    banner::BANNER_SS,
+    display_interface::print_lines,
+    game::{call_prompt, clear_screen},
+    structer::ShadowServices,
+    user_files::SS,
+    MENU_SHADOW,
 };
+use anyhow::{Context, Result};
+use colored::*;
+use requestty::Question;
 
 pub fn ss_main() -> Result<ShadowServices> {
     let answer = requestty::prompt_one(
@@ -26,7 +31,7 @@ pub fn ss_main() -> Result<ShadowServices> {
         3 => Ok(ShadowServices::List),
         5 => {
             clear_screen()?;
-            Ok(ss_main()?)
+            Ok(ShadowServices::Exit)
         }
         6 => return Err(anyhow::anyhow!("Exit")),
         _ => unreachable!(),
@@ -45,6 +50,7 @@ pub fn ss_exit() -> anyhow::Result<()> {
 
     match ss_main()? {
         ShadowServices::Add => ss_add()?,
+        ShadowServices::Exit => call_prompt(),
         _ => unreachable!(),
     }
 
@@ -81,46 +87,47 @@ pub fn ss_add() -> Result<()> {
 
     let ss_details = adoi.prompt_all()?;
 
-    let username = ss_details.get("user").with_context(|| {
-        format!(
-            r#"Error: can't get "user" from prompt - {}:{}"#,
-            file!(),
-            line!()
-        )
-    })?;
+    let username = ss_details
+        .get("user")
+        .with_context(|| display_error("username", file!(), line!()))?;
 
-    let username = username.as_string().with_context(|| {
-        format!(
-            r#"Error: failed while convert username to string - {}:{}"#,
-            file!(),
-            line!()
-        )
-    })?;
+    let username = username
+        .as_string()
+        .with_context(|| display_error_convert("username", "String", file!(), line!()))?;
 
-    let date = ss_details.get("date").with_context(|| {
-        format!(
-            r#"Error: can't get "date" from prompt - {}:{}"#,
-            file!(),
-            line!()
-        )
-    })?;
-    let total_days = date.as_int().with_context(|| {
-        format!(
-            r#"Error: failed while convert date as integer - {}:{}"#,
-            file!(),
-            line!()
-        )
-    })?;
+    let date = ss_details
+        .get("date")
+        .with_context(|| display_error("date", file!(), line!()))?;
+
+    let total_days = date
+        .as_int()
+        .with_context(|| display_error_convert("date", "Int", file!(), line!()))?;
 
     let date = crate::cores::calculate::add_user_date(total_days);
-
     append_line(SS, format!("#USER_SS {} {}\n", username, date))?;
 
     print_lines(username.len());
-    println!("Password   : {}", username);
-    println!("Date       : {}", date);
-    println!("Total Days : {}", total_days);
+    println!("{}: {}", "Password".bold(), username);
+    println!("{}       : {}", "Date".bold(), date);
+    println!("{} : {}", "Total Days".bold(), total_days);
     print_lines(username.len());
+
+    Ok(())
+}
+
+fn delete_ss_user() -> Result<()> {
+    let details = display_user_data(SS)?;
+    let display = user_prompt_index("Select user", details)?;
+    let display = display.as_list_item().context("Invalid user")?;
+
+    let user = crate::cores::proccessing::get_user_index(&display.text, 0);
+    let userdel = subprocess::Exec::shell(format!("sudo userdel {}", user)).join()?;
+
+    if !userdel.success() {
+        return Err(anyhow::anyhow!("{}", "Failed to delete user".red().bold()));
+    }
+
+    crate::cores::expiry::manual_run(SS, &display.text, false)?;
 
     Ok(())
 }

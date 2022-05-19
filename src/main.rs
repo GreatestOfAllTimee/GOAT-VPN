@@ -33,6 +33,7 @@ fn main() -> Result<()> {
     // let new_data: serde_json::Value = "Zulaikha".into();
     // append_json_trojan("/etc/v2ray/config.json", new_data)?;
     // remove_json_trojan("data/json/trojan.json", "Zulaikha")?;
+    // delete_ovpn_user();
 
     Ok(())
 }

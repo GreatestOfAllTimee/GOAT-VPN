@@ -1,11 +1,16 @@
+use crate::cores::proccessing::{append_line, display_user_data, get_user_index};
+use crate::cores::types_error::{display_error, display_error_convert};
 use crate::utils::display_interface::print_lines;
-use crate::utils::game::clear_screen;
+use crate::utils::game::{call_prompt, clear_screen};
+use crate::utils::prompt_interface::user_prompt_index;
 use crate::utils::structer::OvpnServices;
+use crate::utils::user_files::SSH_OVPN;
 use crate::utils::{banner::BANNER_OVPN, MENU_OVPN_SSH};
 use anyhow::{Context, Result};
-use requestty::{Question, Result as ReqResult};
+use colored::*;
+use requestty::Question;
 
-pub fn ovpn_main() -> Result<OvpnServices> {
+fn ovpn_main() -> Result<OvpnServices> {
     let answer = requestty::prompt_one(
         Question::raw_select("user_ssh")
             .message("Select Services")
@@ -22,7 +27,7 @@ pub fn ovpn_main() -> Result<OvpnServices> {
         3 => Ok(OvpnServices::List),
         5 => {
             clear_screen()?;
-            Ok(ovpn_main()?)
+            Ok(OvpnServices::Exit)
         }
         6 => return Err(anyhow::anyhow!("Exit")),
         _ => unreachable!(),
@@ -35,19 +40,37 @@ pub fn ovpn_call_prompt() {
     }
 }
 
-pub fn ovpn_exit() -> anyhow::Result<()> {
+fn ovpn_exit() -> anyhow::Result<()> {
     clear_screen()?;
     println!("{}", BANNER_OVPN);
 
     match ovpn_main()? {
-        OvpnServices::Add => ovpn_add()?,
+        OvpnServices::Add => {
+            ovpn_add()?;
+            confirm_back_ovpn()?
+        }
+        OvpnServices::Delete if std::fs::metadata(SSH_OVPN)?.len() == 0 => {
+            // sleep 2s
+            println!("{}", "No Data Found".yellow().bold());
+            confirm_back_ovpn()?
+        }
+        OvpnServices::Delete => {
+            if delete_ovpn_user().is_ok() {
+                println!("{}", "Sucessfully Deleted".green().bold());
+            } else {
+                println!("{}", "User Not Found".red().bold());
+            }
+
+            confirm_back_ovpn()?
+        }
+        OvpnServices::Exit => call_prompt(),
         _ => unreachable!(),
     }
 
     Ok(())
 }
 
-pub fn ovpn_add() -> ReqResult<()> {
+fn ovpn_add() -> Result<()> {
     let answer = requestty::Answers::default();
     let adoi = requestty::PromptModule::new(vec![
         Question::input("user")
@@ -64,8 +87,8 @@ pub fn ovpn_add() -> ReqResult<()> {
             .message("Enter Password")
             .mask('*')
             .validate(|p, _| {
-                if p.is_empty() || p.len() < 4 {
-                    Err("password cannot be empty or must be greater than 4.".to_owned())
+                if p.is_empty() || p.len() < 3 {
+                    Err("password cannot be empty or must be greater than 3.".to_owned())
                 } else {
                     Ok(())
                 }
@@ -87,22 +110,86 @@ pub fn ovpn_add() -> ReqResult<()> {
     .with_answers(answer);
 
     let ovpn_ssh = adoi.prompt_all()?;
-    let username = ovpn_ssh.get("user").context("add user").unwrap();
-    let username = username.as_string().unwrap();
+    let username = ovpn_ssh
+        .get("user")
+        .with_context(|| display_error("username", file!(), line!()))?;
+    let username = username
+        .as_string()
+        .with_context(|| display_error_convert("username", "String", file!(), line!()))?;
 
-    let password = ovpn_ssh.get("password").context("password").unwrap();
-    let password = password.as_string().unwrap();
+    let password = ovpn_ssh
+        .get("password")
+        .with_context(|| display_error("password", file!(), line!()))?;
+    let password = password
+        .as_string()
+        .with_context(|| display_error_convert("password", "String", file!(), line!()))?;
 
-    let date = ovpn_ssh.get("date").context("date").unwrap();
-    let total_days = date.as_int().unwrap();
+    let date = ovpn_ssh
+        .get("date")
+        .with_context(|| display_error("date", file!(), line!()))?;
+    let total_days = date
+        .as_int()
+        .with_context(|| display_error_convert("date", "Int", file!(), line!()))?;
+
     let date = crate::cores::calculate::add_user_date(total_days);
+    let useradd = subprocess::Exec::shell(format!(
+        "sudo useradd -M -N -s /bin/false -e {} {}",
+        date, username
+    ))
+    .join()
+    .context("Failed to add user")?;
 
-    print_lines(username.len());
-    println!("Username   : {}", username);
-    println!("Password   : {}", password);
-    println!("Date       : {}", date);
-    println!("Total Days : {}", total_days);
-    print_lines(username.len());
+    let user_pass = subprocess::Exec::shell(format!(
+        "echo \"{password}\n{password}\n\" | sudo passwd {username} 2>/dev/null",
+    ))
+    .join()?;
+
+    if useradd.success() && user_pass.success() {
+        append_line(SSH_OVPN, format!("#USER {username} {date}\n"))?;
+        print_lines(username.len());
+        println!("{}   : {}", "username".bold(), username.green());
+        println!("{}   : {}", "Password".bold(), password.green());
+        println!("{}       : {date}", "Date".bold());
+        println!("{} : {total_days}", "Total Days".bold());
+        print_lines(username.len());
+    } else {
+        println!("{}", "Failed to add user".red().bold());
+    }
 
     Ok(())
+}
+
+fn delete_ovpn_user() -> Result<()> {
+    let details = display_user_data(SSH_OVPN)?;
+    let display = user_prompt_index("Select user", details)?;
+    let display = display.as_list_item().context("Invalid user")?;
+
+    let user = get_user_index(&display.text, 0);
+    let userdel = subprocess::Exec::shell(format!("sudo userdel {}", user)).join()?;
+
+    if !userdel.success() {
+        return Err(anyhow::anyhow!("{}", "Failed to delete user".red().bold()));
+    }
+
+    crate::cores::expiry::manual_run(SSH_OVPN, &display.text, false)?;
+
+    Ok(())
+}
+
+fn confirm_back_ovpn() -> Result<()> {
+    if !requestty::prompt_one(
+        Question::confirm("back_to_previous")
+            .message("Do you want to Continue?")
+            .default(true)
+            .build(),
+    )
+    .ok()
+    .and_then(|r| r.as_bool())
+    .unwrap_or(false)
+    {
+        println!("{}", "Exiting".yellow().bold());
+        std::process::exit(0)
+    }
+
+    ovpn_exit()
 }
