@@ -29,3 +29,12 @@ pub enum ShadowServices {
     Back,
     Exit,
 }
+
+// return static string
+pub fn privileges() -> &'static str {
+    if std::env::var("USER").unwrap() != "root" {
+        return "sudo";
+    }
+
+    ""
+}

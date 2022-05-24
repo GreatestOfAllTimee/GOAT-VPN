@@ -25,7 +25,9 @@ fn main() -> Result<()> {
     // auto_run()?;
     // delete_user()?;
     // prompt_ssh_ovpn()?;
-    call_prompt();
+    // call_prompt();
+    let privs = utils::structer::privileges();
+    println!("{}", privs);
 
     // append_json("v2ray.json", data)?;
     // remove_json_value("v2ray.json", email)?;

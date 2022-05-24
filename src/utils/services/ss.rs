@@ -1,7 +1,3 @@
-use crate::{cores::{
-    proccessing::{append_line, display_user_data},
-    types_error::{display_error, display_error_convert},
-}, utils::prompt_interface::user_prompt_index};
 use crate::utils::{
     banner::BANNER_SS,
     display_interface::print_lines,
@@ -9,6 +5,13 @@ use crate::utils::{
     structer::ShadowServices,
     user_files::SS,
     MENU_SHADOW,
+};
+use crate::{
+    cores::{
+        proccessing::{append_line, display_user_data},
+        types_error::{display_error, display_error_convert},
+    },
+    utils::prompt_interface::user_prompt_index,
 };
 use anyhow::{Context, Result};
 use colored::*;
@@ -59,7 +62,7 @@ pub fn ss_exit() -> anyhow::Result<()> {
 
 pub fn ss_add() -> Result<()> {
     let answer = requestty::Answers::default();
-    let adoi = requestty::PromptModule::new(vec![
+    let ask = requestty::PromptModule::new(vec![
         Question::input("user")
             .message("Enter username for OpenVPN")
             .validate(|n, _| {
@@ -85,7 +88,7 @@ pub fn ss_add() -> Result<()> {
     ])
     .with_answers(answer);
 
-    let ss_details = adoi.prompt_all()?;
+    let ss_details = ask.prompt_all()?;
 
     let username = ss_details
         .get("user")
@@ -121,7 +124,8 @@ fn delete_ss_user() -> Result<()> {
     let display = display.as_list_item().context("Invalid user")?;
 
     let user = crate::cores::proccessing::get_user_index(&display.text, 0);
-    let userdel = subprocess::Exec::shell(format!("sudo userdel {}", user)).join()?;
+    let privs = crate::utils::structer::privileges();
+    let userdel = subprocess::Exec::shell(format!("{} userdel {}", privs, user)).join()?;
 
     if !userdel.success() {
         return Err(anyhow::anyhow!("{}", "Failed to delete user".red().bold()));

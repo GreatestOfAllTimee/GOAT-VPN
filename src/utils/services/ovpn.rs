@@ -50,7 +50,6 @@ fn ovpn_exit() -> anyhow::Result<()> {
             confirm_back_ovpn()?
         }
         OvpnServices::Delete if std::fs::metadata(SSH_OVPN)?.len() == 0 => {
-            // sleep 2s
             println!("{}", "No Data Found".yellow().bold());
             confirm_back_ovpn()?
         }
@@ -72,7 +71,7 @@ fn ovpn_exit() -> anyhow::Result<()> {
 
 fn ovpn_add() -> Result<()> {
     let answer = requestty::Answers::default();
-    let adoi = requestty::PromptModule::new(vec![
+    let ask = requestty::PromptModule::new(vec![
         Question::input("user")
             .message("Enter username for OpenVPN")
             .validate(|n, _| {
@@ -109,7 +108,7 @@ fn ovpn_add() -> Result<()> {
     ])
     .with_answers(answer);
 
-    let ovpn_ssh = adoi.prompt_all()?;
+    let ovpn_ssh = ask.prompt_all()?;
     let username = ovpn_ssh
         .get("user")
         .with_context(|| display_error("username", file!(), line!()))?;
@@ -132,15 +131,17 @@ fn ovpn_add() -> Result<()> {
         .with_context(|| display_error_convert("date", "Int", file!(), line!()))?;
 
     let date = crate::cores::calculate::add_user_date(total_days);
+    let privs = crate::utils::structer::privileges();
     let useradd = subprocess::Exec::shell(format!(
-        "sudo useradd -M -N -s /bin/false -e {} {}",
-        date, username
+        "{} useradd -M -N -s /bin/false -e {} {}",
+        privs, date, username
     ))
     .join()
     .context("Failed to add user")?;
 
     let user_pass = subprocess::Exec::shell(format!(
-        "echo \"{password}\n{password}\n\" | sudo passwd {username} 2>/dev/null",
+        "echo \"{password}\n{password}\n\" | {} passwd {username} 2>/dev/null",
+        privs
     ))
     .join()?;
 
@@ -165,7 +166,8 @@ fn delete_ovpn_user() -> Result<()> {
     let display = display.as_list_item().context("Invalid user")?;
 
     let user = get_user_index(&display.text, 0);
-    let userdel = subprocess::Exec::shell(format!("sudo userdel {}", user)).join()?;
+    let privs = crate::utils::structer::privileges();
+    let userdel = subprocess::Exec::shell(format!("{} userdel {}", privs, user)).join()?;
 
     if !userdel.success() {
         return Err(anyhow::anyhow!("{}", "Failed to delete user".red().bold()));

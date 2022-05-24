@@ -53,10 +53,15 @@ pub fn auto_run() -> Result<()> {
     Ok(())
 }
 
+/// # Description:
+/// - This function is used to clear/remove users from the file.
+/// - It can be used for clear expired users.
+///
+/// # Arguments:
 /// [file_name] - file name
-/// [user] username to delete
-/// [only_username] - if set to true, means user "variable" contains username otherwise it contains
-/// username and date
+/// [user] - username to remove
+/// [only_username] - if set to true, means user "variable" only contains username otherwise it
+/// contains username and date
 ///
 /// # Examples
 /// ```
