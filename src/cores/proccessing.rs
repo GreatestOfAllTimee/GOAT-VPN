@@ -5,6 +5,8 @@ use serde_json::json;
 use std::path::PathBuf;
 use std::{fs::File, io::Read};
 
+use crate::utils::structer::lets_read;
+
 // let file = PathBuf::from(file);
 // let query = Query::substring(line, "");
 // let patcher = FilePatcher::new(&file, &query).unwrap();
@@ -333,36 +335,4 @@ pub fn remove_json_trojan(file: &str, need_to_remove: &str) -> Result<()> {
     std::fs::write(file, data)?;
 
     Ok(())
-}
-
-pub mod lets_read {
-    use std::{
-        fs::File,
-        io::{self, prelude::*},
-    };
-
-    pub struct Reader {
-        reader: io::BufReader<File>,
-    }
-
-    impl Reader {
-        pub fn open(path: impl AsRef<std::path::Path>) -> anyhow::Result<Self> {
-            let file = File::open(path)?;
-            let reader = io::BufReader::new(file);
-
-            Ok(Self { reader })
-        }
-
-        pub fn read_line<'buf>(
-            &mut self,
-            buffer: &'buf mut String,
-        ) -> Option<io::Result<&'buf mut String>> {
-            buffer.clear();
-
-            self.reader
-                .read_line(buffer)
-                .map(|u| if u == 0 { None } else { Some(buffer) })
-                .transpose()
-        }
-    }
 }

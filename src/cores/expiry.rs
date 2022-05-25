@@ -1,9 +1,9 @@
 use crate::{
     cores::{
         calculate::calculate_date,
-        proccessing::{delete_line_regex, get_user_index, lets_read},
+        proccessing::{delete_line_regex, get_user_index},
     },
-    utils::user_files::*,
+    utils::{user_files::*, structer::lets_read},
 };
 use anyhow::Result;
 use chrono::NaiveDate;
