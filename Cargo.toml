@@ -17,3 +17,4 @@ ruplacer = { git = "https://github.com/GreatestOfAllTimee/ruplacer" }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = { version = "1.0.81", features = [ "preserve_order" ]}
 subprocess = "0.2.9"
+reqwest = { version = "0.11.10", features = ["blocking"] }

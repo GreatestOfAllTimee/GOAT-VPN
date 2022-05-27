@@ -71,3 +71,31 @@ pub fn print_lines(username: usize) {
         println!("{sep:━>width$}", sep = "━", width = 25);
     }
 }
+
+/// # Example
+/// ```
+/// const MYIP: &str = get_public_ip().unwrap();
+/// println!("{}", MYIP);
+/// ```
+pub fn get_public_ip() -> anyhow::Result<String> {
+    let urls = vec![
+        "https://ifconfig.me",
+        "http://ipinfo.io/ip",
+        "https://checkip.amazonaws.com",
+    ];
+    let mut ip: String = String::new();
+    let client = reqwest::blocking::Client::new();
+
+    for i in urls {
+        let res = client.get(i).send();
+        if res.is_ok() {
+            let res = res?;
+            if res.status().is_success() {
+                ip = res.text()?.replace(&['\n', ' '], "");
+                break;
+            }
+        }
+    }
+
+    Ok(ip)
+}

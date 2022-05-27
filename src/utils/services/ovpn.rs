@@ -1,11 +1,12 @@
 use crate::cores::proccessing::{append_line, display_user_data, get_user_index};
-use crate::cores::types_error::{display_error, display_error_convert};
+use crate::cores::types_error::*;
 use crate::utils::display_interface::print_lines;
 use crate::utils::game::{call_prompt, clear_screen};
 use crate::utils::prompt_interface::user_prompt_index;
 use crate::utils::structer::OvpnServices;
 use crate::utils::user_files::SSH_OVPN;
 use crate::utils::{banner::BANNER_OVPN, MENU_OVPN_SSH};
+
 use anyhow::{Context, Result};
 use colored::*;
 use requestty::Question;

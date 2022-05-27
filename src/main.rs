@@ -17,17 +17,14 @@ use utils::{
     user_files::SSH_OVPN,
 };
 
-#[allow(dead_code)]
-const FILE: &str = "input.txt";
-
+/// TODO: remove all of this comments after testing
 fn main() -> Result<()> {
     // create_user()?;
     // auto_run()?;
     // delete_user()?;
     // prompt_ssh_ovpn()?;
     // call_prompt();
-    let privs = utils::structer::privileges();
-    println!("{}", privs);
+    println!("{}", utils::display_interface::get_public_ip()?);
 
     // append_json("v2ray.json", data)?;
     // remove_json_value("v2ray.json", email)?;
