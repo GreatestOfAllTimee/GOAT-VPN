@@ -209,7 +209,7 @@ pub fn ovpn_test() -> Result<()> {
     let ask_date = ask_date.as_int().context("failed to get date")?;
     let date = crate::cores::calculate::add_user_date(ask_date);
 
-    let adoi = UserData::new2(&username, &password, ask_date, date);
+    let adoi = UserData::new(&username, &password, ask_date, date);
     UserData::run(&adoi)?;
 
     Ok(())

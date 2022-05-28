@@ -10,26 +10,12 @@ pub struct User {
 pub struct UserData<'a> {
     pub name: &'a str,
     pub password: &'a str,
-    pub date: chrono::NaiveDate,
     pub total_days: i64,
+    pub date: chrono::NaiveDate,
 }
 
 impl<'a> UserData<'a> {
     pub fn new(name: &'a str, password: &'a str, total_days: i64, date: chrono::NaiveDate) -> Self {
-        Self {
-            name,
-            password,
-            date,
-            total_days,
-        }
-    }
-
-    pub fn new2(
-        name: &'a str,
-        password: &'a str,
-        total_days: i64,
-        date: chrono::NaiveDate,
-    ) -> Self {
         Self {
             name,
             password,
