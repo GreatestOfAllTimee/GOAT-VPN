@@ -210,50 +210,7 @@ pub fn ovpn_test() -> Result<()> {
     let date = crate::cores::calculate::add_user_date(ask_date);
 
     let adoi = UserData::new2(&username, &password, ask_date, date);
-    // UserData::print_user_details(&adoi);
     UserData::run(&adoi)?;
-
-    // let answer = requestty::Answers::default();
-    // let ask = requestty::PromptModule::new(vec![
-    //     Question::input("user")
-    //         .message("Enter username for OpenVPN")
-    //         .validate(|n, _| {
-    //             if n.is_empty() || n.len() < 3 {
-    //                 Err("username cannot be empty or must be greater than 3.".to_owned())
-    //             } else {
-    //                 Ok(())
-    //             }
-    //         })
-    //         .build(),
-    //     Question::password("password")
-    //         .message("Enter Password")
-    //         .mask('*')
-    //         .validate(|p, _| {
-    //             if p.is_empty() || p.len() < 3 {
-    //                 Err("password cannot be empty or must be greater than 3.".to_owned())
-    //             } else {
-    //                 Ok(())
-    //             }
-    //         })
-    //         .build(),
-    //     Question::int("date")
-    //         .message("Enter a date")
-    //         .default(1)
-    //         .validate_on_key(|d, _| d > 0)
-    //         .validate(|d, _| {
-    //             if d <= 0 {
-    //                 Err("Date cannot be 0 or less".to_owned())
-    //             } else {
-    //                 Ok(())
-    //             }
-    //         })
-    //         .build(),
-    // ])
-    // .with_answers(answer);
-    // let ovpn_ssh = ask.prompt_all()?;
-
-    // let ovpn_details = UserData::extract_details(&ovpn_ssh)?;
-    // UserData::print_user_details(&ovpn_details);
 
     Ok(())
 }
