@@ -9,6 +9,7 @@ use cores::proccessing::{append_line, display_user_data};
 #[allow(unused_imports)]
 use utils::game::call_prompt;
 
+use utils::services::ovpn::ovpn_test;
 #[allow(unused_imports)]
 use utils::{
     display_interface::prompt_ssh_ovpn,
@@ -17,23 +18,27 @@ use utils::{
     user_files::SSH_OVPN,
 };
 
+#[allow(unused_doc_comments)]
 /// TODO: remove all of this comments after testing
 fn main() -> Result<()> {
+    ovpn_test()?;
+    // call_prompt();
     // create_user()?;
     // auto_run()?;
     // delete_user()?;
     // prompt_ssh_ovpn()?;
-    // call_prompt();
-    println!("{}", utils::display_interface::get_public_ip()?);
 
+    // println!("{}", utils::display_interface::get_public_ip()?);
+
+    /// V2RAY : append & remove json values
     // append_json("v2ray.json", data)?;
     // remove_json_value("v2ray.json", email)?;
 
-    // let new_data: serde_json::Value = "Zulaikha".into();
-    // append_json_trojan("/etc/v2ray/config.json", new_data)?;
-    // remove_json_trojan("data/json/trojan.json", "Zulaikha")?;
+    /// TROJAN-VPN : append & remove json values
+    // let new_data: serde_json::Value = "John-Smith".into();
+    // cores::proccessing::append_json_trojan("trojan.json", new_data)?;
+    // cores::proccessing::remove_json_trojan("trojan.json", "John-Smith")?;
     // delete_ovpn_user();
-
     Ok(())
 }
 

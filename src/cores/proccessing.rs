@@ -276,8 +276,8 @@ pub fn remove_json_value(file: &str, need_to_remove: &str) -> Result<()> {
 /// ```
 /// use serde_json::{json, Value};
 ///
-/// let password: Value = "new_password".into();
-/// remove_json_value("config.json", id).unwrap();
+/// let password: Value = "67e55044-10b1-426f-9247-bb680e5fe0c8".into();
+/// remove_json_value("config.json", password).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn append_json_trojan(file: &str, new_data: serde_json::Value) -> Result<()> {
@@ -303,6 +303,7 @@ pub fn append_json_trojan(file: &str, new_data: serde_json::Value) -> Result<()>
 /// ```
 /// // value to delete
 /// let first_name: &str = "Johnathan";
+///
 /// remove_json_value("config.json", first_name).unwrap();
 /// ```
 #[allow(dead_code)]

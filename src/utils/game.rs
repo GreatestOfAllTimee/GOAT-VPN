@@ -1,4 +1,4 @@
-use crate::utils::banner::BANNER_MAIN;
+use crate::utils::{banner::BANNER_MAIN, services::v2ray::v2ray_call_prompt};
 use crate::utils::display_interface::print_lines;
 use crate::utils::services::ovpn::ovpn_call_prompt;
 use crate::utils::services::ss::ss_call_prompt;
@@ -69,7 +69,7 @@ pub fn exit_prompt() -> anyhow::Result<()> {
         MainMenu::Openvpn => ovpn_call_prompt(),
         MainMenu::Shadowsocks => ss_call_prompt(),
         MainMenu::ShadowsocksR => ssr_prompt()?,
-        MainMenu::V2ray => v2ray_prompt("V2ray")?,
+        MainMenu::V2ray => v2ray_call_prompt(),
         MainMenu::Trojan => v2ray_prompt("Trojan")?,
     }
 

@@ -24,7 +24,6 @@ pub fn vec_prompt(list: Vec<String>, index: usize) -> Result<String> {
 /// let maria = user_prompt("Enter your name", 3, "FILE_SSH_OPENVPN.txt").unwrap();
 /// println!("{}", maria);
 /// ```
-#[allow(dead_code)]
 pub fn user_prompt(msg: &str, length: usize, user_file: &str) -> Result<String> {
     let question = Question::input("input")
         .message(msg.to_string())
@@ -46,7 +45,6 @@ pub fn user_prompt(msg: &str, length: usize, user_file: &str) -> Result<String> 
         .replace(&['\"', '\'', '.', ' '][..], "-"))
 }
 
-#[allow(dead_code)]
 pub fn random_string(total: usize, username_or_password: bool) -> String {
     // if username_or_password true then it will be a username otherwise it will be a password
     use rand::distributions::Alphanumeric;
@@ -71,7 +69,6 @@ pub fn random_string(total: usize, username_or_password: bool) -> String {
 /// let test_ssh = test_ssh.as_list_item().context("Error").unwrap();
 /// println!("{}", test_ssh.index);
 /// ```
-#[allow(dead_code)]
 pub fn user_prompt_index<T>(msg: &str, raw: Vec<T>) -> Result<Answer>
 where
     T: Into<String> + std::fmt::Debug,
@@ -81,7 +78,11 @@ where
         .choices(raw)
         .build();
 
-    requestty::prompt_one(question).with_context(|| "prompt_two")
+    requestty::prompt_one(question).context(format!(
+        r#"ERROR: while run "user_prompt_index" {}:{}"#,
+        file!(),
+        line!()
+    ))
 }
 
 /// ### EXAMPLE
@@ -90,7 +91,6 @@ where
 /// let user_password = user_password.as_string().context("Error").unwrap();
 /// println!("{}", user_password);
 /// ```
-#[allow(dead_code)]
 pub fn password_prompt(msg: &str) -> Result<String> {
     let question = Question::password("password")
         .message(msg)
@@ -118,7 +118,6 @@ pub fn password_prompt(msg: &str) -> Result<String> {
 /// let date = user.as_int().context("Error").unwrap();
 /// println!("{}", date);
 /// ```
-#[allow(dead_code)]
 pub fn ask_user_date(msg: &str) -> Result<Answer> {
     let question = Question::int("date")
         .message(msg)

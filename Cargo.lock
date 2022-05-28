@@ -1157,6 +1157,7 @@ dependencies = [
  "serde",
  "serde_json",
  "subprocess",
+ "uuid",
 ]
 
 [[package]]
@@ -1348,6 +1349,15 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
+]
+
+[[package]]
+name = "uuid"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93bbc61e655a4833cf400d0d15bf3649313422fa7572886ad6dab16d79886365"
+dependencies = [
+ "getrandom",
 ]
 
 [[package]]

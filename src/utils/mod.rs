@@ -30,6 +30,13 @@ lazy_static! {
         "List Shadowsocks All Active Account",
     ];
 
+    pub static ref MENU_V2RAY: Vec<&'static str> = vec![
+        "Create V2ray Account",
+        "Delete V2ray Account",
+        "Renew V2ray Account",
+        "List V2ray All Active Account",
+    ];
+
 }
 
 pub mod msg {

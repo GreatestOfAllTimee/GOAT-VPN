@@ -1,73 +1,78 @@
-use crate::utils::{
-    banner::BANNER_SS,
-    display_interface::print_lines,
-    game::{call_prompt, clear_screen},
-    structer::ShadowServices,
-    user_files::SS,
-    MENU_SHADOW,
-};
-use crate::{
-    cores::{
-        proccessing::{append_line, display_user_data},
-        types_error::{display_error, display_error_convert},
-    },
-    utils::prompt_interface::user_prompt_index,
-};
 use anyhow::{Context, Result};
 use colored::Colorize;
 use requestty::Question;
+use serde_json::{json, Value};
+use uuid::Uuid;
 
-pub fn ss_main() -> Result<ShadowServices> {
+use crate::{
+    cores::{
+        proccessing::{append_json, append_line},
+        types_error::{display_error, display_error_convert},
+    },
+    utils::{
+        banner::BANNER_V2RAY,
+        display_interface::print_lines,
+        game::{call_prompt, clear_screen},
+        structer::V2rayServices,
+        user_files::{V2RAY, V2RAY_CONFIG},
+        MENU_V2RAY,
+    },
+};
+
+fn v2ray_main() -> Result<V2rayServices> {
     let answer = requestty::prompt_one(
-        Question::raw_select("user_ss")
+        Question::raw_select("user_v2ray")
             .message("Select Services")
-            .choices(MENU_SHADOW.to_vec())
+            .choices(MENU_V2RAY.to_vec())
             .default_separator()
             .choices(vec!["Back to Main Menu", "Exit"])
             .build(),
     )?;
 
     match answer.as_list_item().unwrap().index {
-        0 => Ok(ShadowServices::Add),
-        1 => Ok(ShadowServices::Delete),
-        2 => Ok(ShadowServices::Renew),
-        3 => Ok(ShadowServices::List),
+        0 => Ok(V2rayServices::Add),
+        1 => Ok(V2rayServices::Delete),
+        2 => Ok(V2rayServices::Renew),
+        3 => Ok(V2rayServices::List),
         5 => {
             clear_screen()?;
-            Ok(ShadowServices::Exit)
+            Ok(V2rayServices::Exit)
         }
         6 => return Err(anyhow::anyhow!("Exit")),
         _ => unreachable!(),
     }
 }
 
-pub fn ss_call_prompt() {
-    if let Err(e) = ss_exit() {
+pub fn v2ray_call_prompt() {
+    if let Err(e) = v2ray_exit() {
         println!("{}", e);
     }
 }
 
-pub fn ss_exit() -> anyhow::Result<()> {
+pub fn v2ray_exit() -> Result<()> {
     clear_screen()?;
-    println!("{}", BANNER_SS);
+    println!("{}", BANNER_V2RAY);
 
-    match ss_main()? {
-        ShadowServices::Add => ss_add()?,
-        ShadowServices::Exit => call_prompt(),
+    match v2ray_main()? {
+        V2rayServices::Add => v2ray_add()?,
+        V2rayServices::Delete => todo!(),
+        V2rayServices::Renew => todo!(),
+        V2rayServices::List => todo!(),
+        V2rayServices::Exit => call_prompt(),
         _ => unreachable!(),
     }
 
     Ok(())
 }
 
-pub fn ss_add() -> Result<()> {
+pub fn v2ray_add() -> Result<()> {
     let answer = requestty::Answers::default();
     let ask = requestty::PromptModule::new(vec![
         Question::input("user")
-            .message("Enter username for Shadowsocks")
+            .message("Enter password for V2ray")
             .validate(|n, _| {
                 if n.is_empty() || n.len() < 3 {
-                    Err("username cannot be empty or must be greater than 3.".to_owned())
+                    Err("password cannot be empty or must be greater than 3.".to_owned())
                 } else {
                     Ok(())
                 }
@@ -88,50 +93,38 @@ pub fn ss_add() -> Result<()> {
     ])
     .with_answers(answer);
 
-    let ss_details = ask.prompt_all()?;
+    let v2ray_details = ask.prompt_all()?;
 
-    let username = ss_details
+    let username = v2ray_details
         .get("user")
         .with_context(|| display_error("username", file!(), line!()))?;
-
     let username = username
         .as_string()
         .with_context(|| display_error_convert("username", "String", file!(), line!()))?;
 
-    let date = ss_details
+    let date = v2ray_details
         .get("date")
         .with_context(|| display_error("date", file!(), line!()))?;
-
     let total_days = date
         .as_int()
         .with_context(|| display_error_convert("date", "Int", file!(), line!()))?;
 
     let date = crate::cores::calculate::add_user_date(total_days);
-    append_line(SS, format!("#USER_SS {} {}\n", username, date))?;
+
+    let data: Value = json!({
+        "id": Uuid::new_v4().to_string(),
+        "alterId": 2,
+        "email": format!("{}@v2ray.com", username)
+    });
+
+    append_json(V2RAY_CONFIG, data)?;
+    append_line(V2RAY, format!("#USER_VMESS {} {}\n", username, date))?;
 
     print_lines(username.len());
-    println!("{}: {}", "Password".bold(), username);
+    println!("{}       : {}", "Password".bold(), username);
     println!("{}       : {}", "Date".bold(), date);
     println!("{} : {}", "Total Days".bold(), total_days);
     print_lines(username.len());
-
-    Ok(())
-}
-
-fn delete_ss_user() -> Result<()> {
-    let details = display_user_data(SS)?;
-    let display = user_prompt_index("Select user", details)?;
-    let display = display.as_list_item().context("Invalid user")?;
-
-    let user = crate::cores::proccessing::get_user_index(&display.text, 0);
-    let privs = crate::utils::structer::privileges();
-    let userdel = subprocess::Exec::shell(format!("{} userdel {}", privs, user)).join()?;
-
-    if !userdel.success() {
-        return Err(anyhow::anyhow!("{}", "Failed to delete user".red().bold()));
-    }
-
-    crate::cores::expiry::manual_run(SS, &display.text, false)?;
 
     Ok(())
 }
