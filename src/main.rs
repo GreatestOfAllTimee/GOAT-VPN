@@ -10,11 +10,11 @@ use cores::proccessing::{append_line, display_user_data};
 use utils::game::call_prompt;
 
 use utils::services::ovpn::ovpn_test;
+use utils::structer::UserData;
 #[allow(unused_imports)]
 use utils::{
     display_interface::prompt_ssh_ovpn,
     prompt_interface::{ask_user_date, password_prompt, user_prompt, user_prompt_index},
-    structer::User,
     user_files::SSH_OVPN,
 };
 
@@ -66,11 +66,7 @@ fn create_user() -> Result<()> {
     let ask_date = ask_date.as_int().context("failed to get date")?;
     let date = add_user_date(ask_date);
 
-    let user_data = User {
-        name: user_name,
-        password: user_password,
-        date,
-    };
+    let user_data = UserData::new(&user_name, &user_password, ask_date, date);
 
     append_line(
         SSH_OVPN,

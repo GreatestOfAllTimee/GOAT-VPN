@@ -135,3 +135,20 @@ fn delete_ss_user() -> Result<()> {
 
     Ok(())
 }
+
+pub fn ss_test() -> Result<()> {
+    use crate::utils::prompt_interface::{ask_user_date, password_prompt, user_prompt};
+    use crate::utils::structer::UserData;
+
+    let username = user_prompt("Enter username", 3, SS)?;
+    let password = password_prompt("Confirm your password")?;
+
+    let ask_date = ask_user_date("Total Days To Exp (days):")?;
+    let ask_date = ask_date.as_int().context("failed to get date")?;
+    let date = crate::cores::calculate::add_user_date(ask_date);
+
+    let adoi = UserData::new(&username, &password, ask_date, date);
+    UserData::run(&adoi)?;
+
+    Ok(())
+}

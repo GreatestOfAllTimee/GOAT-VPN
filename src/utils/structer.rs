@@ -1,14 +1,13 @@
 use anyhow::Context;
 
-/// TODO: using UserData instead of User
-pub struct User {
-    pub name: String,
-    pub password: String,
+pub struct UserData<'a> {
+    pub name: &'a str,
+    pub password: &'a str,
+    pub total_days: i64,
     pub date: chrono::NaiveDate,
 }
 
-pub struct UserData<'a> {
-    pub name: &'a str,
+pub struct UserDataPass<'a> {
     pub password: &'a str,
     pub total_days: i64,
     pub date: chrono::NaiveDate,
@@ -76,6 +75,16 @@ impl<'a> UserData<'a> {
         println!("{}   : {}", "Password".bold(), self.password.green());
         println!("{}       : {}", "Date".bold(), self.date);
         println!("{} : {}", "Total Days".bold(), self.total_days);
+    }
+}
+
+impl<'a> UserDataPass<'a> {
+    pub fn new(password: &'a str, total_days: i64, date: chrono::NaiveDate) -> Self {
+        Self {
+            password,
+            total_days,
+            date,
+        }
     }
 }
 
