@@ -10,11 +10,11 @@ use cores::proccessing::{append_line, display_user_data};
 use utils::game::call_prompt;
 
 use utils::services::ovpn::ovpn_test;
-use utils::structer::UserData;
 #[allow(unused_imports)]
 use utils::{
     display_interface::prompt_ssh_ovpn,
     prompt_interface::{ask_user_date, password_prompt, user_prompt, user_prompt_index},
+    structer::UserData,
     user_files::SSH_OVPN,
 };
 
